@@ -3,13 +3,13 @@
 namespace app\models;
 
 use Yii;
-use yii\web\UploadedFile;
+//use yii\web\UploadedFile;
 
 /**
  * This is the model class for table "product".
  *
  * @property int $id
- * @property int $name_product
+ * @property string $name_product
  * @property string|null $photo
  * @property float $price
  * @property int|null $discount
@@ -21,7 +21,7 @@ use yii\web\UploadedFile;
  * @property Category $category
  * @property Orders[] $orders
  */
-class Product extends \yii\db\ActiveRecord
+class EditProduct extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
@@ -39,10 +39,10 @@ class Product extends \yii\db\ActiveRecord
         return [
             [['name_product', 'price', 'count', 'description', 'category_id'], 'required'],
             [['count', 'category_id'], 'integer'],
-            [['price'], 'number'],
-            [['discount'], 'compare', 'compareValue' => '0', 'operator' => '>=', 'type' => 'integer'],
+            [['price'], 'number', 'min' => 0],
+            [['discount'], 'number', 'min' => 0],
             [['name_product', 'description'], 'string'],
-            [['photo'], 'file', 'extensions' => ['png', 'jpg', 'gif', 'jpeg'], 'maxSize' => 1024*1024*2],
+            [['photo'], 'string', 'max' => 250],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
         ];
     }
@@ -50,33 +50,20 @@ class Product extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function attributeLabels()
+    /*public function attributeLabels()
     {
         return [
-            'id' => 'Id',
+            'id' => 'ID',
             'name_product' => 'Name Product',
             'photo' => 'Photo',
             'price' => 'Price',
             'discount' => 'Discount',
             'count' => 'Count',
             'description' => 'Description',
+            'timestamp' => 'Timestamp',
             'category_id' => 'Category ID',
         ];
     }
-
-    public function beforeValidate()
-    {
-        $this->photo=UploadedFile::getInstanceByName('photo');
-        return parent::beforeValidate();
-    }
-       
-
-    public function fields()
-{
-$fields = parent::fields();
-
-return $fields;
-}
 
     /**
      * Gets query for [[Category]].

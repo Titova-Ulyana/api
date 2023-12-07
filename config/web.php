@@ -84,11 +84,11 @@ $config = [
                 'POST create_order' => 'orders/create',
                 'DELETE del_order/<id>' => 'orders/delete',
                 //admin
-                    'PATCH change_status/<id>' => 'orders/change',
+                'PATCH change_status/<id>' => 'orders/change',
 
                 'POST create_product' => 'product/create',
                 'DELETE del_product/<id>' => 'product/delete',
-                    'PATCH change_product/<id>' => 'product/change',
+                'POST change_product/<id>' => 'product/change',
                 
                 'POST create_category' => 'category/create',
                 'DELETE del_category/<id>' => 'category/delete',

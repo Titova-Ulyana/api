@@ -2,18 +2,26 @@
 namespace app\controllers;
 use app\models\Category;
 use app\models\Product;
-
+use yii\filters\auth\HttpBearerAuth;
 use Yii;
 class CategoryController extends FunctionController
 {
 public $modelClass = 'app\models\Category';
 
+public function behaviors()
+ {
+    $behaviors = parent::behaviors();
+    $behaviors['authenticator'] = [
+    'class' => HttpBearerAuth::class,
+    'only'=>['create', 'delete']
+    ];
+    return $behaviors;
+ }
+
 public function actionCreate()
 {
+    if (!$this->admin()) return $this->send(403, $this->auth_adm);
 
-
-
-    //401/403/admin
     $data=Yii::$app->request->post();
     $category=new Category();
     $category->load($data, '');
@@ -25,9 +33,8 @@ public function actionCreate()
 
 public function actionDelete($id)
 {
+    if (!$this->admin()) return $this->send(403, $this->auth_adm);
 
-
-    //401/403/admin
     $category= Category::findOne($id);
     if(!$category) return $this->send(404, $this->not_found);
     $category->delete();

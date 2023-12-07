@@ -1,28 +1,40 @@
 <?php
 namespace app\controllers;
+use app\models\Category;
+use app\models\EditProduct;
 use app\models\Product;
 
 use Yii;
+use yii\filters\auth\HttpBearerAuth;
 use yii\web\UploadedFile;
 class ProductController extends FunctionController
 {
 public $modelClass = 'app\models\Product';
 
+public function behaviors()
+ {
+    $behaviors = parent::behaviors();
+    $behaviors['authenticator'] = [
+    'class' => HttpBearerAuth::class,
+    'only'=>['create', 'delete', 'change']
+    ];
+    return $behaviors;
+ }
+
 public function actionCreate()
 {
-
-
-
-    //401/403/admin
-    $data=Yii::$app->request->post();
     $product=new Product();
-    $product->load($data, '');
-    if (!$product->validate()) return $this->validation($product);
+    $product->load(Yii::$app->request->post(), '');
 
+    if (!$this->admin()) return $this->send(403, $this->auth_adm);
+
+    if (!$product->validate()) return $this->validation($product);
+    if (UploadedFile::getInstanceByName('photo')){
     $product->photo=UploadedFile::getInstanceByName('photo');
     $hash=hash('sha256', $product->photo->baseName) . '.' . $product->photo->extension;
     $product->photo->saveAs(\Yii::$app->basePath. '/assets/upload/' . $hash);
     $product->photo=$hash;
+    }
     $product->save(false);
     $answer=['data'=>['status'=>'ОК', 'id'=>(int)$product->id]]; 
     return $this->send(200, $answer);
@@ -31,34 +43,33 @@ public function actionCreate()
 public function actionView($id)
 {
     $product= Product::findOne($id);
-    if ($product) {
+    if (!$product) return $this->send(404, $this->not_found);
 
-    $answer=['data'=>['status'=>'ОК', 'product'=>$product]];
+    $category=new Category($product->getCategory()->one());
+    $product->category_id = $category->name_category;
+    $answer=['data'=>['product'=>$product]];
     return $this->send(200, $answer);
-    }
-    return $this->send(404, $this->not_found);
+    
 }
 
 public function actionIndex()
 {
-    $products= Product::find()->all();
-    if ($products) {
-      //убрать поля  
-    $answer=['data'=>['status'=>'ОК', 'product'=>$products]]; 
-    return $this->send(200, $answer);
+    $products= Product::find()->select(['id', 'name_product', 'photo', 'price', 'count'])->all();
+    if ($products) 
+    {
+
+          $answer=['data'=>['products'=>$products]]; 
+          return $this->send(200, $answer);
     }
     return $this->send(404, $this->not_found);
-}
 
+}
 public function actionDelete($id)
 {
-    
-
-
-
-    //401/403/admin
     $product = Product::findOne($id);
     if(!$product) return $this->send(404, $this->not_found);
+    if (!$this->admin()) return $this->send(403, $this->auth_adm);
+
     $product->delete();
     $answer=['data'=>['status'=>'ОК']]; 
     return $this->send(200, $answer);
@@ -67,36 +78,34 @@ public function actionDelete($id)
 
 public function actionChange($id)
 {
-    
 
+    if (!$this->admin()) return $this->send(403, $this->auth_adm);
 
-
-    //401/403/admin
     $product = Product::findOne($id);
     if(!$product) return $this->send(404, $this->not_found);
-    $data = Yii::$app->request->getBodyParams();
-    
-    /*$product->photo=UploadedFile::getInstanceByName('photo');
-    $hash=hash('sha256', $product->photo->baseName) . '.' . $product->photo->extension;
-    $product->photo->saveAs(\Yii::$app->basePath. '/assets/upload/' . $hash);
-    $product->photo=$hash;*/
+    $product->load(Yii::$app->request->post(), '');
 
-    //$product->photo=$data['photo'];
-    
-    $product->price=$data['price'];
-    $product->discount=$data['discount'];
-    $product->count=$data['count'];
-
-    if (!$product->validate()) return $this->validation($product);
-    $product->save(false);
-
-
-
-
+    if (UploadedFile::getInstanceByName('photo')){
+       
+        $url=Yii::$app->basePath.$product->photo;
+         $product->photo = UploadedFile::getInstanceByName('photo');
+        
+         if (!$product->validate()) return $this->validation($product);
+         @unlink($url);
+ 
+         $photo_name='/assets/upload/photo_product_' . Yii::$app->getSecurity()->generateRandomString(40) .'.'. $product->photo->extension;
+        
+         $product->photo->saveAs(Yii::$app->basePath.$photo_name);
+         $product->photo=$photo_name; 
+        }
+         else {
+             $editproduct=new EditProduct($product);    
+             if (!$editproduct->validate()) return $this->validation($editproduct);
+         }
+     
+         $product->save(false);
     $answer=['data'=>['status'=>'ОК']]; 
     return $this->send(200, $answer);
 }
-
-
 
 }

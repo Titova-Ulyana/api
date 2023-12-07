@@ -3,6 +3,7 @@ namespace app\controllers;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\widgets\ActiveForm;
+use Yii;
 class FunctionController extends Controller{
 
 
@@ -28,10 +29,9 @@ public $auth_adm = ["error"=>["code"=> 403, "messege"=>"Access denied"]];
  return $this->send(422, $error);
  }
 
- public function is_admin(){
-    if (Yii::$app->user->identity->is_admin==1) return true; else return false;
-     /*Через тернарный оператор*/
-  //  return Yii::$app->user->identity->is_admin==1 ? true : false;
+ public function admin(){
+    if (Yii::$app->user->identity->admin==1) return true; else return false;
+
  }
 
 

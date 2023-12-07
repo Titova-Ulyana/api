@@ -57,8 +57,6 @@ public function actionLogin()
     return $this->send(200, $data);
     }
     }    
-    /*return $this->send(401, ['error'=>['code'=>401, 'message'=>'Unauthorized',
-   'errors'=>['email'=>'login or password incorrect']]]);*/
     return $this->send(401, $this->unauth);
 }
    
@@ -82,7 +80,8 @@ public function actionLogin()
             $price=(double)$product->price;
             $discount=(double)$product->discount;
             $total_price=$order->count*($price*(100-$discount)/100);
-            $orderItems=['product'=>$product->name_product, 'photo'=>$product->photo, 'price'=>$total_price, 'discount'=>$product->discount, 'count'=>$order->count, 'category'=>$category->name_category,  'description'=>$product->description, 'status'=>$order->status_order];
+            $product->category_id = $category->name_category;
+            $orderItems=['name_product'=>$product->name_product, 'photo'=>$product->photo, 'price'=>$total_price, 'discount'=>$product->discount, 'count'=>$order->count, 'category'=>$product->category_id,  'description'=>$product->description, 'status_order'=>$order->status_order];
             
                 switch ($order->status_order){
                     case 'В обработке': 
@@ -104,7 +103,7 @@ public function actionLogin()
     $answer=['data'=>['user'=>$user, 'orders'=>['in_process'=>$in_process, 'accepted'=>$accepted, 'refual'=>$refual]]]; 
     return $this->send(200, $answer);
         }
-        return $this->send(401, $this->not_found);
+        return $this->send(404, $this->not_found);
 
 }
 
